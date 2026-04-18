@@ -357,15 +357,24 @@
 .grid-container.grid-10 {
   grid-template-columns: repeat(10, 1fr);
   grid-template-rows: 1fr;
-  width: 360px;
-  height: 54px;
+  width: min(360px, 80vw);
+  aspect-ratio: 1;
 }
 
 .grid-container.grid-100 {
   grid-template-columns: repeat(10, 1fr);
   grid-template-rows: repeat(10, 1fr);
-  width: 360px;
-  height: 360px;
+  width: min(360px, 80vw);
+  aspect-ratio: 1;
+}
+
+/* Solid square before breaking into pieces */
+.grid-container.grid-solid {
+  width: min(360px, 80vw);
+  aspect-ratio: 1;
+  background: var(--mustard);
+  border: none;
+  gap: 0;
 }
 
 .grid-cell {
@@ -473,13 +482,13 @@
 }
 
 .piece-column {
-  width: 18px;
-  height: 54px;
+  width: 20px;
+  height: 60px;
 }
 
 .piece-square {
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
 }
 
 .piece-column.piece-red { background: var(--red); }

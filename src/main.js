@@ -4,7 +4,7 @@ import './styles/components.css';
 import './styles/animations.css';
 import { state, save, resetPlacement, resetProgress } from './state.js';
 import { LEVELS, generateProblem, formatDecimal, getNeededPieces } from './levels.js';
-import { renderGrid, clearCells, fillAllMustard, shadeCell, placeColumn, placeSquare, getCells, getGridFrame } from './grid.js';
+import { renderGrid, renderSolidSquare, clearCells, fillAllMustard, shadeCell, placeColumn, placeSquare, getCells, getGridFrame } from './grid.js';
 import { initDrag, setOnPlace } from './placement.js';
 import { playClick, playCorrect, playWrong, playCountBlip, playUnlock, setSoundOn, isSoundOn } from './audio.js';
 
@@ -64,25 +64,30 @@ const tutorialSteps = [
       const gc = document.createElement('div');
       gc.id = 'grid-area';
       area.appendChild(gc);
-      const { cells } = renderGrid(gc, 10);
-      fillAllMustard();
+      renderSolidSquare(gc);
     },
   },
   {
-    caption: 'We can break it into equal pieces to show decimals. Press to watch!',
+    caption: 'We can break it into <em>10 columns</em> to show decimals. Press to watch!',
     action: 'show-me',
     setup: (area) => {
       const gc = document.createElement('div');
       gc.id = 'grid-area';
       area.appendChild(gc);
-      renderGrid(gc, 10);
-      fillAllMustard();
+      renderSolidSquare(gc);
     },
     onShow: async (area) => {
+      // Replace solid square with a 10-column grid, revealing columns one by one
+      const gc = document.getElementById('grid-area');
+      renderGrid(gc, 10);
       const cells = getCells();
+      // Start all cells mustard, then reveal each column
+      cells.forEach(c => c.classList.add('filled-mustard'));
+
       for (let i = 0; i < 10; i++) {
         cells[i].classList.remove('filled-mustard');
         cells[i].style.background = 'var(--paper)';
+        cells[i].style.border = '1px solid rgba(26,24,20,0.25)';
         playCountBlip(i);
 
         // Show count badge
@@ -102,7 +107,7 @@ const tutorialSteps = [
     },
   },
   {
-    caption: 'So <span class="val-red">0.7</span> means 7 out of 10 pieces are shaded. Press to see!',
+    caption: 'So <span class="val-red">0.7</span> means 7 out of 10 columns are shaded. Press to see!',
     action: 'show-me',
     setup: (area) => {
       const gc = document.createElement('div');
@@ -120,7 +125,7 @@ const tutorialSteps = [
     },
   },
   {
-    caption: 'Bigger decimals like <span class="val-red">0.15</span> need even smaller pieces — <em>100</em> of them.',
+    caption: 'Bigger decimals like <span class="val-red">0.15</span> need even smaller pieces — each column breaks into <em>10 tiny squares</em>, giving us <em>100</em> total.',
     action: 'next',
     setup: (area) => {
       const gc = document.createElement('div');

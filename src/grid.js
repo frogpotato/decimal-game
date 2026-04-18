@@ -31,6 +31,23 @@ export function renderGrid(container, size) {
   return { frame, grid, cells };
 }
 
+export function renderSolidSquare(container) {
+  const frame = document.createElement('div');
+  frame.className = 'grid-frame';
+  frame.id = 'grid-frame';
+
+  const grid = document.createElement('div');
+  grid.className = 'grid-container grid-solid';
+  grid.id = 'grid';
+
+  frame.appendChild(grid);
+  container.innerHTML = '';
+  container.appendChild(frame);
+  gridEl = frame;
+  cells = [];
+  return { frame, grid };
+}
+
 export function getGridFrame() { return gridEl; }
 export function getCells() { return cells; }
 
