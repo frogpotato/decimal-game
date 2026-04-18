@@ -2,7 +2,8 @@ export const LEVELS = [
   { id: 1, name: 'Tenths', pieces: 10, difficulty: 'tenths-no-carry', locked: false },
   { id: 2, name: 'Hundredths', pieces: 100, difficulty: 'hundredths-no-carry', locked: false },
   { id: 3, name: 'Mixed', pieces: 100, difficulty: 'mixed', locked: false },
-  { id: 4, name: 'Big Numbers', pieces: 100, difficulty: 'hundredths-carry', locked: false },
+  { id: 4, name: 'Regrouping', pieces: 100, difficulty: 'hundredths-regroup', locked: false },
+  { id: 5, name: 'Big Numbers', pieces: 100, difficulty: 'hundredths-carry', locked: false },
 ];
 
 function randInt(min, max) {
@@ -48,6 +49,18 @@ export function generateProblem(difficulty) {
       n2 = roundDec(hundredth);
       if (roundDec(n1 + n2) >= 1.0) return generateProblem(difficulty);
       return { n1, n2, sum: roundDec(n1 + n2), pieces: 100 };
+    }
+    case 'hundredths-regroup': {
+      // Hundredths digits sum >= 10 (carry into tenths), but total < 1.0
+      const t1 = randInt(1, 3);
+      const t2 = randInt(1, 3);
+      const h1 = randInt(4, 9);
+      const h2 = randInt(10 - h1, 9); // ensures h1 + h2 >= 10
+      n1 = t1 / 10 + h1 / 100;
+      n2 = t2 / 10 + h2 / 100;
+      const s = roundDec(n1 + n2);
+      if (s >= 1.0) return generateProblem(difficulty);
+      return { n1: roundDec(n1), n2: roundDec(n2), sum: s, pieces: 100 };
     }
     case 'hundredths-carry': {
       const t1 = randInt(3, 7);

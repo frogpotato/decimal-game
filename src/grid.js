@@ -95,16 +95,19 @@ export function placeColumn(color) {
   return true;
 }
 
-// Place a square piece (fills one cell in the column reserved for squares)
+// Place a square piece (fills one cell, starting in the column after all needed columns)
 export function placeSquare(color) {
   if (state.session.gridSize !== 100) return false;
   const p = state.session.problem;
-  // Squares always go in the column after all *needed* columns, not just placed ones
   const p1 = p ? getNeededPieces(p.n1, p.pieces) : { cols: 0 };
   const p2 = p ? getNeededPieces(p.n2, p.pieces) : { cols: 0 };
-  const sqCol = p ? (p1.cols + p2.cols) : totalUsedColumns();
-  const sqRow = totalUsedSquares();
-  if (sqCol >= 10 || sqRow >= 10) return false;
+  const startCol = p ? (p1.cols + p2.cols) : totalUsedColumns();
+  const sqNum = totalUsedSquares();
+
+  // Squares fill down a column, then wrap to the next column
+  const sqCol = startCol + Math.floor(sqNum / 10);
+  const sqRow = sqNum % 10;
+  if (sqCol >= 10 || sqNum >= 20) return false;
 
   const cellIdx = sqRow * 10 + sqCol;
   const cls = color === 'red' ? 'placed-red' : 'placed-blue';

@@ -526,6 +526,7 @@ function renderAnswerInput(parent, expected, onCorrect) {
       onCorrect();
     } else {
       playWrong();
+      state.session.streak = 0;
       hint.textContent = 'Try again!';
       input.value = '';
       const frame = getGridFrame();
@@ -533,6 +534,9 @@ function renderAnswerInput(parent, expected, onCorrect) {
         frame.classList.add('shake');
         setTimeout(() => frame.classList.remove('shake'), 400);
       }
+      // Update scoreboard to reflect broken streak
+      const sb = document.getElementById('scoreboard');
+      if (sb) sb.innerHTML = renderScoreboard();
     }
   };
 
@@ -839,7 +843,8 @@ function renderLevelList() {
 function renderScoreboard() {
   const streak = state.session.streak || 0;
   const mult = getMultiplier(streak);
-  const flames = Array.from({ length: 5 }, (_, i) => i < streak ? 'lit' : '').map(
+  const maxFlames = Math.max(5, Math.min(streak, 10));
+  const flames = Array.from({ length: maxFlames }, (_, i) => i < streak ? 'lit' : '').map(
     cls => `<span class="flame ${cls}">🔥</span>`
   ).join('');
 
@@ -852,11 +857,11 @@ function renderScoreboard() {
     <div class="score-section">
       <h3>Streak</h3>
       <div class="streak-flames">${flames}</div>
-      <div class="multiplier">×${mult}</div>
+      <div class="multiplier">${streak > 0 ? `${streak} in a row! ×${mult}` : 'Get one right!'}</div>
     </div>
     <div class="score-section">
       <h3>Best Times</h3>
-      ${LEVELS.slice(0, 3).map(l => `
+      ${LEVELS.map(l => `
         <div class="best-time-row">
           <span>${l.name}</span>
           <span class="best-time-val">${state.bestTimes[l.id] ? state.bestTimes[l.id] + 's' : '—'}</span>
