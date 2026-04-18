@@ -448,10 +448,6 @@ function renderTray(container, color, needed, pieces) {
 function updateTrays(traysEl, p1, p2) {
   const pl = state.session.placement;
 
-  // Check if ALL columns (both colors) are placed
-  const totalColsNeeded = (p1 ? p1.cols : 0) + (p2 ? p2.cols : 0);
-  const totalColsPlaced = pl.redCols + pl.blueCols;
-  const allColsDone = totalColsPlaced >= totalColsNeeded;
 
   const update = (color, type, needed, used) => {
     const remaining = needed - used;
@@ -464,8 +460,7 @@ function updateTrays(traysEl, p1, p2) {
     if (!row) return;
     const piece = row.querySelector('.piece');
     if (piece) {
-      // Squares disabled until all columns are placed
-      const disabled = remaining <= 0 || (type === 'sq' && !allColsDone);
+      const disabled = remaining <= 0;
       piece.classList.toggle('exhausted', disabled);
     }
   };
