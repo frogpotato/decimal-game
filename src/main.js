@@ -546,10 +546,13 @@ function renderAnswerInput(parent, expected, onCorrect) {
 }
 
 // ── PRACTICE & SCORED MODE ────────────────
+const QUESTIONS_PER_LEVEL = 5;
+
 function startPractice() {
   state.session.phase = 'practice';
   state.session.practiceLeft = 3;
   state.session.streak = 0;
+  state.session.levelQuestions = 0;
   renderGameRound();
 }
 
@@ -557,6 +560,7 @@ function startScored() {
   state.session.phase = 'scored';
   state.session.startTime = Date.now();
   state.session.totalPaused = 0;
+  state.session.levelQuestions = 0;
   renderGameRound();
 }
 
@@ -575,7 +579,7 @@ function renderGameRound() {
       </div>
       <div class="play-area" id="play-area">
         <div class="top-bar">
-          ${isPractice ? `<span class="practice-badge">PRACTICE · ${state.session.practiceLeft} left</span>` : ''}
+          ${isPractice ? `<span class="practice-badge">PRACTICE · ${state.session.practiceLeft} left</span>` : `<span class="practice-badge">${state.session.levelQuestions || 0}/${QUESTIONS_PER_LEVEL}</span>`}
           ${!isPractice ? renderTimerPill() : ''}
           ${renderSoundBtn()}
         </div>
@@ -625,11 +629,6 @@ function renderGameDragPhase(area, problem) {
   traysEl.className = 'trays-container';
   area.appendChild(traysEl);
 
-  const tallyEl = document.createElement('div');
-  tallyEl.className = 'tally';
-  tallyEl.id = 'tally';
-  area.appendChild(tallyEl);
-
   const p1 = getNeededPieces(problem.n1, problem.pieces);
   const p2 = getNeededPieces(problem.n2, problem.pieces);
 
@@ -649,7 +648,6 @@ function renderGameDragPhase(area, problem) {
     playClick();
     resetPlacement();
     clearCells();
-    updateTally(tallyEl, p1, p2, problem.pieces);
     updateTrays(traysEl, p1, p2);
     doneBtn.style.display = 'none';
   });
@@ -660,7 +658,6 @@ function renderGameDragPhase(area, problem) {
   doneBtn.style.display = 'none';
   doneBtn.addEventListener('click', () => {
     playClick();
-    // Remove trays, show answer input
     traysEl.remove();
     actionRow.remove();
     renderAnswerInput(area, problem.sum, () => onAnswerCorrect(problem));
@@ -671,7 +668,6 @@ function renderGameDragPhase(area, problem) {
   area.appendChild(actionRow);
 
   setOnPlace(() => {
-    updateTally(tallyEl, p1, p2, problem.pieces);
     updateTrays(traysEl, p1, p2);
     const placed = state.session.placement;
     const totalPlaced = placed.redCols + placed.redSqs + placed.blueCols + placed.blueSqs;
@@ -679,8 +675,6 @@ function renderGameDragPhase(area, problem) {
       doneBtn.style.display = '';
     }
   });
-
-  updateTally(tallyEl, p1, p2, problem.pieces);
 }
 
 function onAnswerCorrect(problem) {
@@ -694,6 +688,9 @@ function onAnswerCorrect(problem) {
 
   const isPractice = state.session.phase === 'practice';
 
+  // Track questions answered
+  state.session.levelQuestions = (state.session.levelQuestions || 0) + 1;
+
   if (!isPractice) {
     // Scored mode
     const multiplier = getMultiplier(state.session.streak);
@@ -704,27 +701,43 @@ function onAnswerCorrect(problem) {
       state.bestStreak = state.session.streak;
     }
 
-    // Check for level unlock
-    if (state.session.streak === 3) {
-      const nextLevel = state.session.currentLevel + 1;
-      if (nextLevel <= 5 && !state.unlocked[nextLevel]) {
-        state.unlocked[nextLevel] = true;
-        playUnlock();
-        spawnConfetti(60);
-        setTimeout(() => showModal('Level Unlocked!', `You unlocked Level ${nextLevel}: ${LEVELS[nextLevel - 1].name}!`, () => {}), 500);
-      }
-    }
-
-    // Update stars
     updateStars();
     save();
+
+    // After 5 questions, auto-advance to next level
+    if (state.session.levelQuestions >= QUESTIONS_PER_LEVEL) {
+      const nextLevel = state.session.currentLevel + 1;
+      if (nextLevel <= 5) {
+        state.unlocked[nextLevel] = true;
+        save();
+        playUnlock();
+        spawnConfetti(60);
+        setTimeout(() => {
+          showModal('Level Complete!', `Great job! Moving on to Level ${nextLevel}: ${LEVELS[nextLevel - 1].name}!`, () => {
+            state.session.currentLevel = nextLevel;
+            state.session.levelQuestions = 0;
+            startScored();
+          });
+        }, 1000);
+        return;
+      } else {
+        // All levels done
+        setTimeout(() => {
+          showModal('All Levels Complete!', 'You finished every level — amazing!', () => {
+            state.session.levelQuestions = 0;
+            renderGameRound();
+          });
+        }, 1000);
+        return;
+      }
+    }
   }
 
   if (isPractice) {
     state.session.practiceLeft--;
     if (state.session.practiceLeft <= 0) {
       setTimeout(() => {
-        showModal('Practice done!', "Real rounds next — timer starts! Let's go!", () => {
+        showModal('Practice done!', "Real rounds next — let's go!", () => {
           startScored();
         });
       }, 1200);
