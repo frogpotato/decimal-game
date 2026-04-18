@@ -330,6 +330,14 @@
 .caption-box .val-mustard { color: var(--mustard); font-weight: 700; }
 
 /* ── GRID ─────────────────────────────── */
+#grid-area {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
 .grid-frame {
   border: 3px solid var(--ink);
   border-radius: var(--radius);
@@ -337,7 +345,12 @@
   background: var(--white);
   display: inline-block;
   padding: 4px;
-  transition: box-shadow 0.2s;
+  transition: box-shadow 0.2s, width 0.3s, transform 0.3s;
+}
+
+.grid-frame.grid-half .grid-container.grid-100,
+.grid-frame.grid-half .grid-container.grid-10 {
+  width: min(170px, 38vw);
 }
 
 .grid-frame.drop-hover {

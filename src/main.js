@@ -222,7 +222,7 @@ function renderTutorial() {
         </div>
         <div class="caption-box">${step.caption}</div>
       </div>
-      <div class="scoreboard">
+      <div class="scoreboard" id="scoreboard">
         ${renderScoreboard()}
       </div>
     </div>
@@ -599,7 +599,7 @@ function renderGameRound() {
           </div>
         </div>
       </div>
-      <div class="scoreboard">
+      <div class="scoreboard" id="scoreboard">
         ${renderScoreboard()}
       </div>
     </div>
@@ -626,6 +626,14 @@ function renderGameRound() {
 function renderGameDragPhase(area, problem) {
   resetPlacement();
 
+  // Check if this problem will need more than one grid (sum >= 1.0)
+  const p1 = getNeededPieces(problem.n1, problem.pieces);
+  const p2 = getNeededPieces(problem.n2, problem.pieces);
+  const totalCols = p1.cols + p2.cols;
+  const totalSqs = p1.sqs + p2.sqs;
+  const sqCols = Math.ceil(totalSqs / 10);
+  state.session.needsMultiGrid = (totalCols + sqCols) > 10;
+
   const gc = document.createElement('div');
   gc.id = 'grid-area';
   area.appendChild(gc);
@@ -634,9 +642,6 @@ function renderGameDragPhase(area, problem) {
   const traysEl = document.createElement('div');
   traysEl.className = 'trays-container';
   area.appendChild(traysEl);
-
-  const p1 = getNeededPieces(problem.n1, problem.pieces);
-  const p2 = getNeededPieces(problem.n2, problem.pieces);
 
   renderTray(traysEl, 'red', p1, problem.pieces);
   renderTray(traysEl, 'blue', p2, problem.pieces);
@@ -709,6 +714,10 @@ function onAnswerCorrect(problem) {
 
     updateStars();
     save();
+
+    // Update scoreboard with new streak/score
+    const sb = document.getElementById('scoreboard');
+    if (sb) sb.innerHTML = renderScoreboard();
 
     // After 5 questions, celebrate and reset counter so they can keep going or pick another level
     if (state.session.levelQuestions >= QUESTIONS_PER_LEVEL) {

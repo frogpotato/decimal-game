@@ -1,9 +1,10 @@
 export const LEVELS = [
   { id: 1, name: 'Tenths', pieces: 10, difficulty: 'tenths-no-carry', locked: false },
   { id: 2, name: 'Hundredths', pieces: 100, difficulty: 'hundredths-no-carry', locked: false },
-  { id: 3, name: 'Mixed', pieces: 100, difficulty: 'mixed', locked: false },
-  { id: 4, name: 'Regrouping', pieces: 100, difficulty: 'hundredths-regroup', locked: false },
-  { id: 5, name: 'Big Numbers', pieces: 100, difficulty: 'hundredths-carry', locked: false },
+  { id: 3, name: 'Place Value', pieces: 100, difficulty: 'place-value', locked: false },
+  { id: 4, name: 'Mixed', pieces: 100, difficulty: 'mixed', locked: false },
+  { id: 5, name: 'Regrouping', pieces: 100, difficulty: 'hundredths-regroup', locked: false },
+  { id: 6, name: 'Big Numbers', pieces: 100, difficulty: 'hundredths-carry', locked: false },
 ];
 
 function randInt(min, max) {
@@ -29,6 +30,17 @@ export function generateProblem(difficulty) {
       n1 = randInt(Math.max(1, sum - 9), Math.min(9, sum - 1));
       n2 = sum - n1;
       return { n1: n1 / 10, n2: n2 / 10, sum: sum / 10, pieces: 10 };
+    }
+    case 'place-value': {
+      // One number is a clean tenth (.X0), the other has 0 tenths (.0Y)
+      // e.g. .4 + .06, .30 + .07, .5 + .03
+      const tenth = randInt(1, 6) / 10;
+      const hundredth = randInt(1, 9) / 100;
+      // Randomly swap order so sometimes it's .06 + .4
+      if (Math.random() < 0.5) {
+        return { n1: tenth, n2: hundredth, sum: roundDec(tenth + hundredth), pieces: 100 };
+      }
+      return { n1: hundredth, n2: tenth, sum: roundDec(tenth + hundredth), pieces: 100 };
     }
     case 'hundredths-no-carry': {
       const t1 = randInt(1, 4);

@@ -33,6 +33,7 @@ export function initDrag(pieceEl, type, color) {
     activeDrag = { clone, type, color, startX: e.clientX, startY: e.clientY, moved: false };
 
     const frame = getGridFrame();
+    const gridArea = document.getElementById('grid-area');
 
     const onMove = (ev) => {
       if (!activeDrag) return;
@@ -43,11 +44,12 @@ export function initDrag(pieceEl, type, color) {
       activeDrag.clone.style.left = (ev.clientX - rect.width / 2) + 'px';
       activeDrag.clone.style.top = (ev.clientY - rect.height / 2) + 'px';
 
-      if (frame) {
-        const fr = frame.getBoundingClientRect();
+      const dropTarget = gridArea || frame;
+      if (dropTarget) {
+        const fr = dropTarget.getBoundingClientRect();
         const over = ev.clientX >= fr.left && ev.clientX <= fr.right &&
                      ev.clientY >= fr.top && ev.clientY <= fr.bottom;
-        frame.classList.toggle('drop-hover', over);
+        dropTarget.classList.toggle('drop-hover', over);
       }
     };
 
@@ -55,13 +57,14 @@ export function initDrag(pieceEl, type, color) {
       if (!activeDrag) return;
       ev.preventDefault();
 
-      if (frame) frame.classList.remove('drop-hover');
+      const dropTarget = gridArea || frame;
+      if (dropTarget) dropTarget.classList.remove('drop-hover');
 
       let shouldPlace = false;
 
       if (activeDrag.moved) {
-        // Drag mode — check if over grid
-        const fr = frame ? frame.getBoundingClientRect() : null;
+        // Drag mode — check if over grid area
+        const fr = dropTarget ? dropTarget.getBoundingClientRect() : null;
         shouldPlace = fr && ev.clientX >= fr.left && ev.clientX <= fr.right &&
                       ev.clientY >= fr.top && ev.clientY <= fr.bottom;
       } else {

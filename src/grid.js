@@ -4,32 +4,71 @@ import { playSnap } from './audio.js';
 
 let gridEl = null;
 let cells = [];
+let grids = []; // array of { frame, grid, cells } for multi-grid support
+let gridContainer = null; // parent element that holds all grids
 
 export function renderGrid(container, size) {
   state.session.gridSize = size;
+  grids = [];
+  cells = [];
+  gridContainer = container;
+  container.innerHTML = '';
+
+  const { frame, grid, gridCells } = createOneGrid(size);
+  container.appendChild(frame);
+  gridEl = frame;
+  cells = gridCells;
+  grids.push({ frame, grid, cells: gridCells });
+  return { frame, grid, cells: gridCells };
+}
+
+function createOneGrid(size) {
   const frame = document.createElement('div');
   frame.className = 'grid-frame';
-  frame.id = 'grid-frame';
+  if (grids.length === 0) frame.id = 'grid-frame';
 
   const grid = document.createElement('div');
   grid.className = `grid-container grid-${size}`;
-  grid.id = 'grid';
+  if (grids.length === 0) grid.id = 'grid';
+
+  // Smaller grids when showing two side by side
+  if (grids.length > 0 || state.session.needsMultiGrid) {
+    frame.classList.add('grid-half');
+  }
 
   const count = size === 10 ? 10 : 100;
-  cells = [];
+  const gridCells = [];
   for (let i = 0; i < count; i++) {
     const cell = document.createElement('div');
     cell.className = 'grid-cell';
     cell.dataset.index = i;
     grid.appendChild(cell);
-    cells.push(cell);
+    gridCells.push(cell);
   }
 
   frame.appendChild(grid);
-  container.innerHTML = '';
-  container.appendChild(frame);
-  gridEl = frame;
-  return { frame, grid, cells };
+  return { frame, grid, gridCells };
+}
+
+function ensureSecondGrid() {
+  if (grids.length >= 2) return;
+  const size = state.session.gridSize;
+  const { frame, grid, gridCells } = createOneGrid(size);
+
+  // Make first grid half-size too
+  grids[0].frame.classList.add('grid-half');
+
+  gridContainer.appendChild(frame);
+  grids.push({ frame, grid, cells: gridCells });
+
+  // Animate it in
+  frame.style.opacity = '0';
+  frame.style.transform = 'scale(0.8)';
+  requestAnimationFrame(() => {
+    frame.style.transition = 'opacity 0.3s, transform 0.3s var(--ease-bounce)';
+    frame.style.opacity = '1';
+    frame.style.transform = 'scale(1)';
+  });
 }
 
 export function renderSolidSquare(container) {
@@ -46,16 +85,22 @@ export function renderSolidSquare(container) {
   container.appendChild(frame);
   gridEl = frame;
   cells = [];
+  grids = [];
   return { frame, grid };
 }
 
 export function getGridFrame() { return gridEl; }
 export function getCells() { return cells; }
+export function getGrids() { return grids; }
 
 export function clearCells() {
-  cells.forEach(c => {
-    c.className = 'grid-cell';
-  });
+  grids.forEach(g => g.cells.forEach(c => { c.className = 'grid-cell'; }));
+  // Remove second grid if it exists
+  if (grids.length > 1) {
+    grids[1].frame.remove();
+    grids.splice(1, 1);
+    grids[0].frame.classList.remove('grid-half');
+  }
 }
 
 export function fillAllMustard() {
@@ -81,10 +126,20 @@ export function placeColumn(color) {
     cells[colIdx].classList.add(cls);
   } else {
     // 100-grid: fill all 10 rows in the column
-    if (colIdx >= 10) return false;
+    const gridIdx = Math.floor(colIdx / 10);
+    const localCol = colIdx % 10;
+
+    if (gridIdx >= 2) return false;
+
+    // Spawn second grid if needed
+    if (gridIdx >= 1) ensureSecondGrid();
+
+    const targetCells = grids[gridIdx]?.cells;
+    if (!targetCells) return false;
+
     const cls = color === 'red' ? 'placed-red' : 'placed-blue';
     for (let row = 0; row < 10; row++) {
-      cells[row * 10 + colIdx].classList.add(cls);
+      targetCells[row * 10 + localCol].classList.add(cls);
     }
   }
 
@@ -105,13 +160,23 @@ export function placeSquare(color) {
   const sqNum = totalUsedSquares();
 
   // Squares fill down a column, then wrap to the next column
-  const sqCol = startCol + Math.floor(sqNum / 10);
+  const absCol = startCol + Math.floor(sqNum / 10);
   const sqRow = sqNum % 10;
-  if (sqCol >= 10 || sqNum >= 20) return false;
 
-  const cellIdx = sqRow * 10 + sqCol;
+  const gridIdx = Math.floor(absCol / 10);
+  const localCol = absCol % 10;
+
+  if (gridIdx >= 2 || sqNum >= 20) return false;
+
+  // Spawn second grid if needed
+  if (gridIdx >= 1) ensureSecondGrid();
+
+  const targetCells = grids[gridIdx]?.cells;
+  if (!targetCells) return false;
+
+  const cellIdx = sqRow * 10 + localCol;
   const cls = color === 'red' ? 'placed-red' : 'placed-blue';
-  cells[cellIdx].classList.add(cls);
+  targetCells[cellIdx].classList.add(cls);
 
   if (color === 'red') state.session.placement.redSqs++;
   else state.session.placement.blueSqs++;
