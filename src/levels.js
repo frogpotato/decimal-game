@@ -1,8 +1,8 @@
 export const LEVELS = [
   { id: 1, name: 'Tenths', pieces: 10, difficulty: 'tenths-no-carry', locked: false },
   { id: 2, name: 'Hundredths', pieces: 100, difficulty: 'hundredths-no-carry', locked: false },
-  { id: 3, name: 'Mixed', pieces: 100, difficulty: 'mixed', locked: true },
-  { id: 4, name: 'Big Numbers', pieces: 100, difficulty: 'hundredths-carry', locked: true },
+  { id: 3, name: 'Mixed', pieces: 100, difficulty: 'mixed', locked: false },
+  { id: 4, name: 'Big Numbers', pieces: 100, difficulty: 'hundredths-carry', locked: false },
 ];
 
 function randInt(min, max) {

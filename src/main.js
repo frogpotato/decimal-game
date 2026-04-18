@@ -711,32 +711,17 @@ function onAnswerCorrect(problem) {
     updateStars();
     save();
 
-    // After 5 questions, auto-advance to next level
+    // After 5 questions, celebrate and reset counter so they can keep going or pick another level
     if (state.session.levelQuestions >= QUESTIONS_PER_LEVEL) {
-      const nextLevel = state.session.currentLevel + 1;
-      if (nextLevel <= LEVELS.length) {
-        state.unlocked[nextLevel] = true;
-        save();
-        playUnlock();
-        spawnConfetti(60);
-        setTimeout(() => {
-          showModal('Level Complete!', `Great job! Moving on to Level ${nextLevel}: ${LEVELS[nextLevel - 1].name}!`, () => {
-            state.session.currentLevel = nextLevel;
-            state.session.levelQuestions = 0;
-            startScored();
-          });
-        }, 1000);
-        return;
-      } else {
-        // All levels done
-        setTimeout(() => {
-          showModal('All Levels Complete!', 'You finished every level — amazing!', () => {
-            state.session.levelQuestions = 0;
-            renderGameRound();
-          });
-        }, 1000);
-        return;
-      }
+      playUnlock();
+      spawnConfetti(60);
+      setTimeout(() => {
+        showModal('Level Complete!', 'Great job! Pick another level or keep going!', () => {
+          state.session.levelQuestions = 0;
+          renderGameRound();
+        });
+      }, 1000);
+      return;
     }
   }
 
