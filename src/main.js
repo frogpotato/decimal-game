@@ -550,7 +550,8 @@ const QUESTIONS_PER_LEVEL = 5;
 
 function startPractice() {
   state.session.phase = 'practice';
-  state.session.practiceLeft = 3;
+  const level = LEVELS[state.session.currentLevel - 1];
+  state.session.practiceLeft = level.pieces === 10 ? 1 : 3;
   state.session.streak = 0;
   state.session.levelQuestions = 0;
   renderGameRound();
