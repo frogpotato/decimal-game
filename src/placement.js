@@ -7,10 +7,18 @@ let activeDrag = null;
 export function setOnPlace(cb) { onPlaceCallback = cb; }
 
 export function initDrag(pieceEl, type, color) {
+  // Prevent default touch behaviors
+  pieceEl.style.touchAction = 'none';
+  pieceEl.style.userSelect = 'none';
+  pieceEl.style.webkitUserSelect = 'none';
+
   pieceEl.addEventListener('pointerdown', (e) => {
     e.preventDefault();
     e.stopPropagation();
-    pieceEl.setPointerCapture(e.pointerId);
+
+    // If piece is exhausted, ignore
+    if (pieceEl.classList.contains('exhausted')) return;
+
     playPop();
 
     const rect = pieceEl.getBoundingClientRect();
@@ -22,16 +30,16 @@ export function initDrag(pieceEl, type, color) {
     clone.style.top = (e.clientY - rect.height / 2) + 'px';
     document.body.appendChild(clone);
 
-    activeDrag = { clone, type, color, pointerId: e.pointerId };
+    activeDrag = { clone, type, color, startX: e.clientX, startY: e.clientY, moved: false };
 
     const frame = getGridFrame();
-    if (frame) frame.classList.add('drop-hover');
 
     const onMove = (ev) => {
-      if (!activeDrag || ev.pointerId !== activeDrag.pointerId) return;
+      if (!activeDrag) return;
       ev.preventDefault();
-      clone.style.left = (ev.clientX - rect.width / 2) + 'px';
-      clone.style.top = (ev.clientY - rect.height / 2) + 'px';
+      activeDrag.moved = true;
+      activeDrag.clone.style.left = (ev.clientX - rect.width / 2) + 'px';
+      activeDrag.clone.style.top = (ev.clientY - rect.height / 2) + 'px';
 
       if (frame) {
         const fr = frame.getBoundingClientRect();
@@ -42,33 +50,41 @@ export function initDrag(pieceEl, type, color) {
     };
 
     const onUp = (ev) => {
-      if (!activeDrag || ev.pointerId !== activeDrag.pointerId) return;
+      if (!activeDrag) return;
       ev.preventDefault();
 
       if (frame) frame.classList.remove('drop-hover');
 
-      const fr = frame ? frame.getBoundingClientRect() : null;
-      const over = fr && ev.clientX >= fr.left && ev.clientX <= fr.right &&
-                   ev.clientY >= fr.top && ev.clientY <= fr.bottom;
+      let shouldPlace = false;
 
-      if (over) {
+      if (activeDrag.moved) {
+        // Drag mode — check if over grid
+        const fr = frame ? frame.getBoundingClientRect() : null;
+        shouldPlace = fr && ev.clientX >= fr.left && ev.clientX <= fr.right &&
+                      ev.clientY >= fr.top && ev.clientY <= fr.bottom;
+      } else {
+        // Tap mode — just place it directly (no drag needed)
+        shouldPlace = true;
+      }
+
+      if (shouldPlace) {
         let placed = false;
         if (type === 'column') placed = placeColumn(color);
         else placed = placeSquare(color);
-
         if (placed && onPlaceCallback) onPlaceCallback();
       }
 
-      clone.remove();
+      activeDrag.clone.remove();
       activeDrag = null;
 
-      pieceEl.removeEventListener('pointermove', onMove);
-      pieceEl.removeEventListener('pointerup', onUp);
-      pieceEl.removeEventListener('pointercancel', onUp);
+      document.removeEventListener('pointermove', onMove);
+      document.removeEventListener('pointerup', onUp);
+      document.removeEventListener('pointercancel', onUp);
     };
 
-    pieceEl.addEventListener('pointermove', onMove);
-    pieceEl.addEventListener('pointerup', onUp);
-    pieceEl.addEventListener('pointercancel', onUp);
+    // Use document-level listeners for reliability
+    document.addEventListener('pointermove', onMove);
+    document.addEventListener('pointerup', onUp);
+    document.addEventListener('pointercancel', onUp);
   });
 }
