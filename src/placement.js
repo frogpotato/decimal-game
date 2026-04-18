@@ -37,7 +37,9 @@ export function initDrag(pieceEl, type, color) {
     const onMove = (ev) => {
       if (!activeDrag) return;
       ev.preventDefault();
-      activeDrag.moved = true;
+      const dx = ev.clientX - activeDrag.startX;
+      const dy = ev.clientY - activeDrag.startY;
+      if (Math.abs(dx) > 5 || Math.abs(dy) > 5) activeDrag.moved = true;
       activeDrag.clone.style.left = (ev.clientX - rect.width / 2) + 'px';
       activeDrag.clone.style.top = (ev.clientY - rect.height / 2) + 'px';
 

@@ -3,9 +3,9 @@ const STORAGE_KEY = 'decimal-game-v1';
 const defaults = {
   totalPoints: 0,
   bestStreak: 0,
-  unlocked: { 1: true, 2: true, 3: true, 4: false, 5: false },
-  stars: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
-  bestTimes: { 1: null, 2: null, 3: null, 4: null, 5: null },
+  unlocked: { 1: true, 2: true, 3: false, 4: false },
+  stars: { 1: 0, 2: 0, 3: 0, 4: 0 },
+  bestTimes: { 1: null, 2: null, 3: null, 4: null },
   prefs: { sound: true },
 };
 
