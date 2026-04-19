@@ -14,7 +14,14 @@ function load() {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return { ...defaults };
     const saved = JSON.parse(raw);
-    return { ...defaults, ...saved, prefs: { ...defaults.prefs, ...saved.prefs } };
+    return {
+      ...defaults,
+      ...saved,
+      unlocked: { ...defaults.unlocked, ...saved.unlocked },
+      stars: { ...defaults.stars, ...saved.stars },
+      bestTimes: { ...defaults.bestTimes, ...saved.bestTimes },
+      prefs: { ...defaults.prefs, ...saved.prefs },
+    };
   } catch {
     return { ...defaults };
   }

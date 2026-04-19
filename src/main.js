@@ -733,8 +733,10 @@ function onAnswerCorrect(problem) {
           state.session.levelQuestions = 0;
           if (hasNext) {
             state.session.currentLevel = nextLevel;
+            startPractice();
+          } else {
+            startScored();
           }
-          startScored();
         });
       }, 1000);
       return;
