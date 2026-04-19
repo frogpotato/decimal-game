@@ -719,14 +719,22 @@ function onAnswerCorrect(problem) {
     const sb = document.getElementById('scoreboard');
     if (sb) sb.innerHTML = renderScoreboard();
 
-    // After 5 questions, celebrate and reset counter so they can keep going or pick another level
+    // After 5 questions, celebrate and advance to next level
     if (state.session.levelQuestions >= QUESTIONS_PER_LEVEL) {
+      const nextLevel = state.session.currentLevel + 1;
+      const hasNext = nextLevel <= LEVELS.length;
       playUnlock();
       spawnConfetti(60);
       setTimeout(() => {
-        showModal('Level Complete!', 'Great job! Pick another level or keep going!', () => {
+        const msg = hasNext
+          ? `Great job! Moving on to ${LEVELS[nextLevel - 1].name}!`
+          : 'You finished every level — amazing!';
+        showModal('Level Complete!', msg, () => {
           state.session.levelQuestions = 0;
-          renderGameRound();
+          if (hasNext) {
+            state.session.currentLevel = nextLevel;
+          }
+          startScored();
         });
       }, 1000);
       return;
